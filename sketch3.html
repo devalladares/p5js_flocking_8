@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+
+    <title>Sketch 3</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.17.1/matter.min.js"></script>
+
+    <style>
+      button {
+      position: relative;
+      /*             top: 10px; */
+      /*             left: 10px; */
+      z-index: 2;
+      padding: 4px 11px;
+      border-radius: 2px;
+      /*       background-color: #f2f2f2; */
+      background-color: lightgrey;
+      border: 2px solid #black;
+      /*       color: #333; */
+      font-family: Arial, sans-serif;
+      color: black;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      box-shadow:
+      2px 2px 0 red,
+      2px 2px 0 red;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+
+      // HERE // HERE // HERE // HERE // HERE // HERE // HERE
+
+      const Engine = Matter.Engine;
+      const World = Matter.World;
+      const Bodies = Matter.Bodies;
+
+      let engine;
+      let world;
+
+      let fireworks = [];
+
+      let defaultR = 10;
+      let defaultR2 = 200;
+      let perceptionRadiusNum = 100;
+      let edgeForceNum = 0.2;
+
+      let cohesionFactor = 1;
+      let alignmentFactor = 0.1;
+      let separationFactor = 0.1;
+      let lifeNumMinus = 2
+      let lifeNum = 250
+      let ySpeedNum = 0
+      let xSpeedNum = 0
+      let speedNum = 0
+      let explodeNum = 2
+      let density1 = 0.1
+      let density2 = 1
+      let rValue = 1;
+      let rValue2 = 1;
+
+      function randomizeVariables() {
+      defaultR = random(2, 100);
+      defaultR2 = random(100, 200);
+      defaultbody1 = random(1, 100);
+      defaultbody2 = random(1, 100);
+      density1 = random(0.1, 4);
+      density2 = random(0.1, 1);
+      explodeNum = floor(random(1, 10));
+      rValue = random(1);
+      rValue2 = random(1);
+      // console.log(rValue2)
+
+      speedNum = random(-3, 3);
+      xSpeedNum = random(-0.3, 0.3);
+      // xSpeedNum = 0
+      ySpeedNum = random(-0.3, 0.3);
+      // ySpeedNum = 0
+      perceptionRadiusNum = random(30, 300);
+      edgeForceNum = random(-2, 0.5);
+      cohesionFactor = random(-2, 2);
+      alignmentFactor = random(-2, 2);
+      separationFactor = random(-2, 2);
+      lifeNum = random(100, 300);
+      lifeNumMinus = random(1, 4);
+
+      // resetParticles();
+      }
+      
+//       function randomizeVariables() {
+//   defaultR = random(2, 150);
+//   defaultR2 = random(200, 300);
+//   defaultbody1 = random(1, 100);
+//   defaultbody2 = random(1, 100);
+//   density1 = random(0.1, 4);
+//   density2 = random(0.1, 1);
+//   explodeNum = floor(random(1, 10));
+//   rValue = random(1);
+//   rValue2 = random(1);
+
+//   speedNum = random(-5, 5);
+//   xSpeedNum = random(-1, 1);
+//   ySpeedNum = random(-1, 1);
+//   perceptionRadiusNum = random(30, 300);
+//   edgeForceNum = random(-2, 0.5);
+//   cohesionFactor = random(-5, 5);
+//   alignmentFactor = random(-5, 5);
+//   separationFactor = random(-5, 5);
+//   lifeNum = random(100, 300);
+//   lifeNumMinus = random(1, 4);
+// }
+
+
+      function setup() {
+      createCanvas(windowWidth, windowHeight);
+      engine = Engine.create();
+        
+       // Add collision event listener
+        const Events = Matter.Events;
+        Events.on(engine, 'collisionStart', function (event) {
+          let pairs = event.pairs;
+          for (let i = 0; i < pairs.length; i++) {
+            let pair = pairs[i];
+            let bodyA = pair.bodyA;
+            let bodyB = pair.bodyB;
+
+            if (bodyA.label === 'Particle' && bodyB.label === 'Particle') {
+              let collisionNormal = pair.collision.normal;
+              let force = 0.5;
+
+              let velocityA = {
+                x: bodyA.velocity.x + collisionNormal.x * force,
+                y: bodyA.velocity.y + collisionNormal.y * force,
+              };
+              let velocityB = {
+                x: bodyB.velocity.x - collisionNormal.x * force,
+                y: bodyB.velocity.y - collisionNormal.y * force,
+              };
+
+              Matter.Body.setVelocity(bodyA, velocityA);
+              Matter.Body.setVelocity(bodyB, velocityB);
+            }
+          }
+        });
+
+        world = engine.world;
+
+      colorMode(HSB);
+
+      let randomizeButton = createButton('Randomize');
+      randomizeButton.position(10, 45);
+      randomizeButton.mousePressed(randomizeVariables);
+
+      canvas = document.querySelector("canvas");
+      canvas.addEventListener(
+      "touchmove",
+      function (event) {
+      event.preventDefault();
+      },
+      { passive: false }
+      );
+        
+        
+
+      }
+
+      function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+      }
+
+
+      function draw() {
+      background(0);
+
+      for (let i = fireworks.length - 1; i >= 0; i--) {
+      if (fireworks[i] instanceof Particle) {
+
+      // if (rValue2 < 0.5) {
+      // fireworks[i].applyFlocking1(fireworks);
+      // } else {
+      // fireworks[i].applyFlocking2(fireworks);
+      // }
+
+                    fireworks[i].applyFlocking1(fireworks);
+
+
+      }
+      fireworks[i].update();
+      fireworks[i].show();
+
+      if (fireworks[i].exploded) {
+      fireworks.splice(i, 1);
+      }
+
+      }
+
+
+      Engine.update(engine);
+      }
+
+      function mouseDragged() {
+      fireworks.push(new Firework(mouseX, mouseY));
+
+      }
+
+      function touchMoved() {
+      fireworks.push(new Firework(mouseX, mouseY));
+      return false; // Prevent default behavior (scrolling) on touch devices
+      }
+
+
+      class Firework {
+      constructor(x, y) {
+     this.body = Bodies.circle(x, y, defaultR, {restitution: 1, friction: 0, frictionAir: 0, collisionFilter: {group: -1}, label: 'Firework'});
+
+
+
+        
+        
+      if (rValue < 0.25) {
+        //SMALL
+      this.r = random(defaultR, defaultR / 2);
+    } else if (rValue < 0.5) {
+        //SAME
+      this.r = defaultR
+    } else if (rValue < 0.75) {
+        //HUGE
+      this.r = random(defaultR, defaultR2);
+    } else {
+      //Fractal
+      this.r =  this.r = random(defaultR, random(defaultR, random(defaultR, random(defaultR, defaultR2*1.5))));
+    }
+
+      World.add(world, this.body);
+      this.exploded = false;
+      this.color = color(random(50), random(50,100), random(50,100));
+      }
+
+      update() {
+      if (!this.exploded && this.body.position.y < height) {
+      this.explode();
+      World.remove(world, this.body);
+      }
+      }
+
+      show() {
+      fill('red');
+      ellipse(this.body.position.x, this.body.position.y, this.r);
+      }
+
+      explode() {
+      for (let i = 0; i < explodeNum; i++) {
+      let angle = random(TWO_PI);
+      let speed = speedNum
+      let xSpeed = speed * cos(angle);
+      let ySpeed = speed * sin(angle);
+      let particle = new Particle(this.body.position.x, this.body.position.y);
+      Matter.Body.setVelocity(particle.body, { x: xSpeed, y: ySpeed });
+      fireworks.push(particle);
+      }
+      this.exploded = true;
+      }
+      }
+
+
+      class Particle {
+      constructor(x, y) {
+     this.body = Bodies.circle(x, y, density1, { density: defaultR, restitution: 1, friction: 0, frictionAir: 0, collisionFilter: {group: -1}, label: 'Particle' });
+
+
+
+
+      World.add(world, this.body);
+      this.life = lifeNum;
+      this.xSpeed = xSpeedNum
+      this.ySpeed = ySpeedNum
+        
+        
+ // if (rValue < 0.5) {
+ //      this.r = random(defaultR / 2, defaultR);
+ //      } else {
+ //      this.r = random(defaultR, random(defaultR, random(defaultR, random(defaultR, defaultR2))));
+ //      }
+        
+        
+      if (rValue < 0.25) {
+        //SMALL
+      this.r = random(defaultR, defaultR / 2);
+    } else if (rValue < 0.5) {
+        //SAME
+      this.r = defaultR
+    } else if (rValue < 0.75) {
+        //HUGE
+      this.r = random(defaultR, defaultR2);
+    } else {
+      //Fractal
+      this.r =  this.r = random(defaultR, random(defaultR, random(defaultR, random(defaultR, defaultR2*1.5))));
+    }
+        
+        
+      this.color = color(random(50), random(100), random(100));
+      // this.color = color(random(255),random(255),random(255))
+
+
+      }
+
+      ////////////////// APPLYFLOCKING 1 //////////////////
+
+      applyFlocking1(particles) {
+      let perceptionRadius = perceptionRadiusNum;
+      let cohesion = createVector();
+      let alignment = createVector();
+      let separation = createVector();
+      let count = 0;
+
+      for (let other of particles) {
+      if (other instanceof Particle) {
+      let distance = dist(
+      this.body.position.x,
+      this.body.position.y,
+      other.body.position.x,
+      other.body.position.y
+      );
+
+      if (other !== this && distance < perceptionRadius) {
+      cohesion.add(other.body.position.x, other.body.position.y);
+      alignment.add(other.body.velocity.x, other.body.velocity.y);
+
+      let diff = createVector(
+      this.body.position.x - other.body.position.x,
+      this.body.position.y - other.body.position.y
+      );
+      diff.div(distance);
+      separation.add(diff);
+
+      count++;
+      }
+      }
+      }
+
+      if (count > 0) {
+      cohesion.div(count);
+      cohesion.sub(this.body.position.x, this.body.position.y);
+      cohesion.setMag(cohesionFactor);
+      this.xSpeed += cohesion.x;
+      this.ySpeed += cohesion.y;
+
+      alignment.div(count);
+      alignment.setMag(alignmentFactor);
+      this.xSpeed += alignment.x;
+      this.ySpeed += alignment.y;
+
+      separation.div(count);
+      separation.setMag(separationFactor);
+      this.xSpeed += separation.x;
+      this.ySpeed += separation.y;
+      }
+
+      let mouseVector = createVector(
+      mouseX - this.body.position.x,
+      mouseY - this.body.position.y
+      );
+      mouseVector.setMag(0.1);
+      this.xSpeed += mouseVector.x;
+      this.ySpeed += mouseVector.y;
+      }
+
+      ////////////////// APPLYFLOCKING 2 //////////////////
+
+      applyFlocking2(particles) {
+      let perceptionRadius = perceptionRadiusNum;
+      let cohesion = createVector();
+      let alignment = createVector();
+      let separation = createVector();
+      let count = 0;
+
+      for (let other of particles) {
+      if (other instanceof Particle) {
+      let distance = dist(
+      this.body.position.x,
+      this.body.position.y,
+      other.body.position.x,
+      other.body.position.y
+      );
+
+      if (other !== this && distance < perceptionRadius) {
+      cohesion.add(other.body.position.x, other.body.position.y);
+      alignment.add(other.body.velocity.x, other.body.velocity.y);
+
+      let diff = createVector(
+      this.body.position.x - other.body.position.x,
+      this.body.position.y - other.body.position.y
+      );
+      diff.div(distance);
+      separation.add(diff);
+
+      count++;
+      }
+      }
+      }
+
+      if (count > 0) {
+      cohesion.div(count);
+      cohesion.sub(this.body.position.x, this.body.position.y);
+      cohesion.setMag(0.5);
+
+      alignment.div(count);
+      alignment.setMag(0.05);
+
+      separation.div(count);
+      separation.setMag(0.3);
+      }
+
+      this.xSpeed += cohesion.x + alignment.x + separation.x;
+      this.ySpeed += cohesion.y + alignment.y + separation.y;
+      }
+
+
+      ////////////////// END //////////////////
+
+
+
+      update() {
+      this.life -= lifeNumMinus;
+      Matter.Body.setVelocity(this.body, {
+      x: this.xSpeed,
+      y: this.ySpeed,
+      });
+
+      let edgeForce = 0;
+      if (this.body.position.x < 0) this.xSpeed += edgeForce;
+      if (this.body.position.x > width) this.xSpeed -= edgeForce;
+      if (this.body.position.y < 0) this.ySpeed += edgeForce;
+      if (this.body.position.y > height) this.ySpeed -= edgeForce;
+
+      // Check if life is depleted
+      if (this.life <= 0) {
+      this.exploded = true;
+      World.remove(world, this.body);
+      }
+      }
+
+      show() {
+      fill(this.color);
+      strokeWeight(3)
+      ellipse(this.body.position.x, this.body.position.y, this.r);
+      }
+      }
+
+      function resetParticles() {
+      for (let i = fireworks.length - 1; i >= 0; i--) {
+      World.remove(world, fireworks[i].body);
+      }
+      fireworks = [];
+      }
+
+      // HERE // HERE // HERE // HERE // HERE // HERE // HERE
+    </script>
+  </body>
+</html>

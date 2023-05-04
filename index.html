@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>Multiple p5.js sketches</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <style>
+      html, body {
+      background-color: black;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      }
+      iframe {
+               position: absolute;
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      border: none;
+      }
+
+      button {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  padding: 4px 10px;
+  border-radius: 2px;
+  background-color: lightgrey;
+  border: 2px solid #black;
+  font-family: Arial, sans-serif;
+  color: black;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  box-shadow:
+    2px 2px 0 red,
+    2px 2px 0 red;
+}
+
+      iframe.active {
+      display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <button onclick="toggleSketch()">Next sketch</button>
+
+    <iframe id="sketch1" class="active" src="sketch1.html"></iframe>
+    <iframe id="sketch2" src="sketch2.html"></iframe>
+    <iframe id="sketch3" src="sketch3.html"></iframe>
+    <iframe id="sketch4" src="sketch4.html"></iframe>
+<!--     <iframe id="sketch5" src="sketch5.html"></iframe> -->
+
+    <script>
+      let currentSketch = 1;
+
+      function toggleSketch() {
+      currentSketch++;
+      if (currentSketch > 3) {
+      currentSketch = 1;
+      }
+
+      // hide all sketches except the active one
+      for (let i = 1; i <= 3; i++) {
+      let iframe = document.getElementById(`sketch${i}`);
+      if (i === currentSketch) {
+      iframe.classList.add("active");
+      } else {
+      iframe.classList.remove("active");
+      }
+      }
+      }
+    </script>
+  </body>
+</html>

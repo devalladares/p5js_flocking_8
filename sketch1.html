@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+
+    <title>Sketch 1</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.17.1/matter.min.js"></script>
+    
+     <style>
+             button {
+                  position: relative;
+      /*             top: 10px; */
+      /*             left: 10px; */
+                  z-index: 2;
+/*                   padding: 4px 10px; */
+/*                   border-radius: 2px; */
+            /*       background-color: #f2f2f2; */
+                  background-color: lightgrey;
+/*                   border: 2px solid #black; */
+            /*       color: #333; */
+                  font-family: Arial, sans-serif;
+            color: black;
+                  text-align: center;
+                  text-decoration: none;
+                  display: inline-block;
+                  font-size: 16px;
+                  box-shadow:
+                  2px 2px 0 red,
+                  2px 2px 0 red;
+                  }
+    </style>
+  </head>
+  <body>
+    <script>
+
+                        // HERE // HERE // HERE // HERE // HERE // HERE // HERE
+
+                       const Engine = Matter.Engine;
+                  const World = Matter.World;
+                  const Bodies = Matter.Bodies;
+
+                  let engine;
+                  let world;
+
+                  let fireworks = [];
+
+                  function setup() {
+                    createCanvas(windowWidth, windowHeight);
+                    engine = Engine.create();
+                    world = engine.world;
+                    colorMode(HSB);
+
+                    canvas = document.querySelector("canvas");
+        canvas.addEventListener(
+          "touchmove",
+          function (event) {
+            event.preventDefault();
+          },
+          { passive: false }
+        );
+                  }
+
+       function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+      }
+
+
+                  function draw() {
+                    background(0);
+
+                    for (let i = fireworks.length - 1; i >= 0; i--) {
+                      if (fireworks[i] instanceof Particle) {
+                        fireworks[i].applyFlocking(fireworks);
+
+                      }
+                      fireworks[i].update();
+                      fireworks[i].show();
+
+                      if (fireworks[i].exploded) {
+                        fireworks.splice(i, 1);
+                      }
+
+                    }
+
+
+                    Engine.update(engine);
+                  }
+
+                  function mouseDragged() {
+                        fireworks.push(new Firework(mouseX, mouseY));
+
+                  }
+
+                  function touchMoved() {
+              fireworks.push(new Firework(mouseX, mouseY));
+              return false; // Prevent default behavior (scrolling) on touch devices
+            }
+
+
+                  class Firework {
+                    constructor(x, y) {
+                      this.body = Bodies.circle(x, y, 10);
+                      this.r = random(10, random(10, random(10, random(10, 100))));
+
+                      World.add(world, this.body);
+                      this.exploded = false;
+                      this.color = color(random(50), random(100), random(100));
+
+                    }
+
+                    update() {
+                      if (!this.exploded && this.body.position.y < height) {
+                        this.explode();
+                        World.remove(world, this.body);
+                      }
+                    }
+
+                    show() {
+                      fill('red');
+                      ellipse(this.body.position.x, this.body.position.y, this.r);
+                    }
+
+                    explode() {
+                      for (let i = 0; i < 1; i++) {
+                        let angle = random(TWO_PI);
+                        let speed = random(0);
+                        let xSpeed = speed * cos(angle);
+                        let ySpeed = speed * sin(angle);
+                        let particle = new Particle(this.body.position.x, this.body.position.y);
+                        Matter.Body.setVelocity(particle.body, { x: xSpeed, y: ySpeed });
+                        fireworks.push(particle);
+                      }
+                      this.exploded = true;
+                    }
+                  }
+
+                  class Particle {
+                    constructor(x, y) {
+                      this.body = Bodies.circle(x, y, 2, { isStatic: false });
+                      World.add(world, this.body);
+                      this.life = 255;
+                      this.xSpeed = random(-1, 1);
+                      this.ySpeed = random(-1, 1);
+                      this.r = random(20, random(20, random(20, random(20, 200))));
+                      this.color = color(random(50), random(100), random(100));
+                      // this.color = color(random(255),random(255),random(255))
+
+
+                    }
+
+                    applyFlocking(particles) {
+                      let perceptionRadius = 100;
+                      let cohesion = createVector();
+                      let alignment = createVector();
+                      let separation = createVector();
+                      let count = 0;
+
+                      for (let other of particles) {
+                        if (other instanceof Particle) {
+                          let distance = dist(
+                            this.body.position.x,
+                            this.body.position.y,
+                            other.body.position.x,
+                            other.body.position.y
+                          );
+
+                          if (other !== this && distance < perceptionRadius) {
+                            cohesion.add(other.body.position.x, other.body.position.y);
+                            alignment.add(other.body.velocity.x, other.body.velocity.y);
+
+                            let diff = createVector(
+                              this.body.position.x - other.body.position.x,
+                              this.body.position.y - other.body.position.y
+                            );
+                            diff.div(distance);
+                            separation.add(diff);
+
+                            count++;
+                          }
+                        }
+                      }
+
+                      if (count > 0) {
+                        cohesion.div(count);
+                        cohesion.sub(this.body.position.x, this.body.position.y);
+                        cohesion.setMag(1);
+                        this.xSpeed += cohesion.x;
+                        this.ySpeed += cohesion.y;
+
+                        alignment.div(count);
+                        alignment.setMag(0.1);
+                        this.xSpeed += alignment.x;
+                        this.ySpeed += alignment.y;
+
+                        separation.div(count);
+                        separation.setMag(0.1);
+                        this.xSpeed += separation.x;
+                        this.ySpeed += separation.y;
+                      }
+                    }
+
+                   update() {
+                    this.life -= 2;
+                    Matter.Body.setVelocity(this.body, {
+                      x: this.xSpeed,
+                      y: this.ySpeed,
+                    });
+
+                    // Apply stronger forces towards the center when near the edge
+                    let edgeForce = 0.2; // Increased from 0.1
+                    if (this.body.position.x < 0) this.xSpeed += edgeForce;
+                    if (this.body.position.x > width) this.xSpeed -= edgeForce;
+                    if (this.body.position.y < 0) this.ySpeed += edgeForce;
+                    if (this.body.position.y > height) this.ySpeed -= edgeForce;
+
+                    // Check if life is depleted
+                    if (this.life <= 0) {
+                      this.exploded = true;
+                      World.remove(world, this.body);
+                    }
+                  }
+
+
+                    show() {
+                      fill(this.color);
+                      strokeWeight(3)
+                      ellipse(this.body.position.x, this.body.position.y, this.r);
+                    }
+                  }
+
+
+
+
+                        // HERE // HERE // HERE // HERE // HERE // HERE // HERE
+    </script>
+  </body>
+</html>
