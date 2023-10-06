@@ -39,12 +39,16 @@
 
                         // HERE // HERE // HERE // HERE // HERE // HERE // HERE
 
+      
+
                        const Engine = Matter.Engine;
                   const World = Matter.World;
                   const Bodies = Matter.Bodies;
+      
 
                   let engine;
                   let world;
+      let showText = true;
 
                   let fireworks = [];
 
@@ -68,9 +72,32 @@
         resizeCanvas(windowWidth, windowHeight);
       }
 
+      function mouseDragged() {
+    showText = false; // Hide the text
+    fireworks.push(new Firework(mouseX, mouseY));
+}
+
+function touchMoved() {
+    showText = false; // Hide the text
+    fireworks.push(new Firework(mouseX, mouseY));
+    return false; // Prevent default behavior (scrolling) on touch devices
+}
+
+function mouseClicked() {
+    showText = false; // Hide the text
+}
+
 
                   function draw() {
                     background(0);
+
+                     // Display the text if showText is true
+                    if (showText) {
+        fill(255); // White color
+        textSize(24); // Adjust text size as needed
+        textAlign(CENTER, CENTER); // Center the text
+        text("Click or drag here", width / 2, height / 2);
+    }
 
                     for (let i = fireworks.length - 1; i >= 0; i--) {
                       if (fireworks[i] instanceof Particle) {
