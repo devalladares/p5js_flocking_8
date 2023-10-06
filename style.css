@@ -15,12 +15,11 @@ body::-webkit-scrollbar {
 }
 
 body::-webkit-scrollbar-track {
-  background: #333;
+  background: black;
 }
 
-body::-webkit-scar-thumb {
-  background-color: #666;
-  border-radius: 20px;
+body::-webkit-scrollbar-thumb {
+  background-color: black;
 }
 
 
