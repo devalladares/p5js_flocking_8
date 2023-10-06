@@ -42,3 +42,8 @@ iframe {
 * {
     overflow: hidden;
 }
+
+canvas {
+    border: 1px solid white;
+}
+
